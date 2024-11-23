@@ -1,0 +1,25 @@
+{
+  "name": "mix-player",
+  "version": "1.0.0",
+  "description": "cross platform & feature packed audio player",
+  "main": "player.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "install": "node-gyp rebuild"
+  },
+  "keywords": [
+    "audio player",
+    "audio",
+    "player",
+    "music",
+    "sound",
+    "speaker"
+  ],
+  "author": "existencing",
+  "license": "ISC",
+  "gypfile": true
+}
