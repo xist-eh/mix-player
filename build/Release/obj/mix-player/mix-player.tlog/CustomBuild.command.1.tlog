@@ -1,6 +1,0 @@
-^D:\DEV\MIX-PLAYER\SRC\LIB\DLL\SDL2.DLL
-call mkdir "..\build\Release" 2>nul & set ERRORLEVEL=0 & copy /Y "..\src\lib\dll\SDL2.dll" "..\build\Release\SDL2.dll"
-if %errorlevel% neq 0 exit /b %errorlevel%
-^D:\DEV\MIX-PLAYER\SRC\LIB\DLL\SDL2_MIXER.DLL
-call mkdir "..\build\Release" 2>nul & set ERRORLEVEL=0 & copy /Y "..\src\lib\dll\SDL2_mixer.dll" "..\build\Release\SDL2_mixer.dll"
-if %errorlevel% neq 0 exit /b %errorlevel%

@@ -1,25 +1,28 @@
 {
+  "main": "lib/binding.js",
+  "type": "module",
+  "dependencies": {
+    "node-addon-api": "^1.1.0"
+  },
+  "scripts": {
+    "test": "node tests/test",
+    "build": "cd addon && rm -rf build && node-gyp configure build",
+    "install": "cd addon && node-gyp rebuild"
+  },
+  "gypfile": true,
   "name": "mix-player",
   "version": "1.0.0",
-  "description": "cross platform & feature packed audio player",
-  "main": "player.js",
-  "directories": {
-    "lib": "lib"
-  },
-  "type": "module",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "install": "node-gyp rebuild"
-  },
+  "description": "cross platform & feature-rich audio player",
   "keywords": [
     "audio player",
     "audio",
     "player",
+    "music player",
     "music",
-    "sound",
-    "speaker"
+    "speaker",
+    "mp3",
+    "m4a"
   ],
   "author": "existencing",
-  "license": "ISC",
-  "gypfile": true
+  "license": "ISC"
 }
