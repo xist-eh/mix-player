@@ -1,12 +1,12 @@
 
 #define MINIAUDIO_IMPLEMENTATION
+#define NAPI_VERSION 4
 
-#include "node_api.h"
-#include "node_api_types.h"
-#include "napi.h"
+#include "../node-addon-api/napi.h"
 
 #include <iostream>
 #include <string>
+#include <thread>
 
 #include "./miniaudio.h"
 
@@ -16,7 +16,7 @@ using std::cout;
 ma_engine engine;
 ma_sound audio;
 
-Napi::FunctionReference audioEndCallback;
+Napi::ThreadSafeFunction tsfn;
 
 void destroy(const Napi::CallbackInfo &info)
 {
@@ -85,15 +85,13 @@ void loadAudioFile(const Napi::CallbackInfo &info)
 
     ma_sound_set_end_callback(&audio, [](void *pUserData, ma_sound *pSound)
                               {
-                                Napi::Env e = *(Napi::Env *)pUserData;
-                             
-                                  cout << "Sound ended!";
-                                  audioEndCallback.Call({}); }, env);
+                                cout << "Callback called for sound end";
+                                tsfn.NonBlockingCall(); }, env);
 
     return;
 }
 
-void onAudioEndcb(const Napi::CallbackInfo &info)
+void onAudioEnd(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
 
@@ -106,7 +104,7 @@ void onAudioEndcb(const Napi::CallbackInfo &info)
     {
         napi_throw_error(env, 0, "incorrect argument type, expected function");
     }
-    audioEndCallback = Napi::Persistent(info[0].As<Napi::Function>());
+    tsfn = Napi::ThreadSafeFunction::New(env, info[0].As<Napi::Function>(), "TSFN", 0, 3);
 }
 
 Napi::Object Init(Napi::Env env, Napi::Object exports)
@@ -126,7 +124,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports)
     exports.Set(Napi::String::New(env, "playAudio"), Napi::Function::New(env, playAudio));
     exports.Set(Napi::String::New(env, "pauseAudio"), Napi::Function::New(env, pauseAudio));
     exports.Set(Napi::String::New(env, "seekAudio"), Napi::Function::New(env, seekAudio));
-    exports.Set(Napi::String::New(env, "onAudioEnd"), Napi::Function::New(env, onAudioEndcb));
+    exports.Set(Napi::String::New(env, "onAudioEnd"), Napi::Function::New(env, onAudioEnd));
 
     return exports;
 }

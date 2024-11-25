@@ -4,4 +4,4 @@ MixPlayer.load("./tests/test_audio.mp3");
 
 MixPlayer.play();
 
-while (true) {}
+setTimeout(() => {}, 10000);
