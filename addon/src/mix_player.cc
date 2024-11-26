@@ -1,6 +1,6 @@
 
 #define MINIAUDIO_IMPLEMENTATION
-#define NAPI_VERSION 4
+#define NAPI_VERSION 8
 
 #include "../node-addon-api/napi.h"
 
@@ -17,6 +17,8 @@ ma_engine engine;
 ma_sound audio;
 
 Napi::ThreadSafeFunction tsfn;
+
+ma_engine_config config;
 
 void destroy(const Napi::CallbackInfo &info)
 {
@@ -59,7 +61,7 @@ void seekAudio(const Napi::CallbackInfo &info)
 
     int time = info[0].As<Napi::Number>().Int32Value();
 
-    ma_sound_seek_to_pcm_frame(&audio, time * 60);
+    ma_sound_seek_to_pcm_frame(&audio, time * config.sampleRate);
 }
 
 void loadAudioFile(const Napi::CallbackInfo &info)
@@ -84,9 +86,7 @@ void loadAudioFile(const Napi::CallbackInfo &info)
     }
 
     ma_sound_set_end_callback(&audio, [](void *pUserData, ma_sound *pSound)
-                              {
-                                cout << "Callback called for sound end";
-                                tsfn.NonBlockingCall(); }, env);
+                              { tsfn.NonBlockingCall(); }, env);
 
     return;
 }
@@ -107,12 +107,42 @@ void onAudioEnd(const Napi::CallbackInfo &info)
     tsfn = Napi::ThreadSafeFunction::New(env, info[0].As<Napi::Function>(), "TSFN", 0, 3);
 }
 
+Napi::Boolean isPlaying(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+
+    return Napi::Boolean::New(env, ma_sound_is_playing(&audio));
+}
+
 Napi::Object Init(Napi::Env env, Napi::Object exports)
 {
 
     ma_result result;
+    ma_context context;
+    ma_device_info *pPlaybackDeviceInfos;
+    ma_uint32 playbackDeviceCount;
+    ma_device_info *pCaptureDeviceInfos;
+    ma_uint32 captureDeviceCount;
+    ma_uint32 iDevice;
 
-    result = ma_engine_init(NULL, &engine);
+    if (ma_context_init(NULL, 0, NULL, &context) != MA_SUCCESS)
+    {
+        napi_throw_error(env, 0, "Could not initialize audio engine");
+    }
+
+    result = ma_context_get_devices(&context, &pPlaybackDeviceInfos, &playbackDeviceCount, &pCaptureDeviceInfos, &captureDeviceCount);
+
+    printf("Playback Devices\n");
+    for (iDevice = 0; iDevice < playbackDeviceCount; ++iDevice)
+    {
+        printf("    %u: %s\n", iDevice, pPlaybackDeviceInfos[iDevice].name);
+    }
+
+    config = ma_engine_config_init();
+
+    config.sampleRate = 48000;
+
+    result = ma_engine_init(&config, &engine);
 
     if (result != MA_SUCCESS)
     {
@@ -125,6 +155,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports)
     exports.Set(Napi::String::New(env, "pauseAudio"), Napi::Function::New(env, pauseAudio));
     exports.Set(Napi::String::New(env, "seekAudio"), Napi::Function::New(env, seekAudio));
     exports.Set(Napi::String::New(env, "onAudioEnd"), Napi::Function::New(env, onAudioEnd));
+    exports.Set(Napi::String::New(env, "isPlaying"), Napi::Function::New(env, isPlaying));
 
     return exports;
 }

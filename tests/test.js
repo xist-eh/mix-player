@@ -1,7 +1,11 @@
 import { MixPlayer } from "../addon/binding.js";
 
-MixPlayer.load("./tests/test_audio.mp3");
+MixPlayer.load("D:\\Dev\\blessed-player\\test-music\\bound2.mp3");
 
 MixPlayer.play();
 
-setTimeout(() => {}, 10000);
+MixPlayer.seek(220);
+
+await MixPlayer.wait();
+
+console.log("ending program");

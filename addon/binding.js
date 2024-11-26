@@ -7,6 +7,20 @@ const addon = createRequire(import.meta.url)(
 );
 
 function MixPlayer() {
+  let pWaitResolve;
+
+  let callbackFns = [];
+
+  const audioCallback = () => {
+    if (pWaitResolve) {
+      pWaitResolve();
+      pWaitResolve = null;
+    }
+    for (const i of callbackFns) {
+      i();
+    }
+  };
+
   const player = {
     load: (file) => {
       file = path.resolve(file);
@@ -15,15 +29,30 @@ function MixPlayer() {
         throw new Error("Attempted to play non-existent file!");
       }
       addon.loadAudioFile(file);
-      addon.onAudioEnd(() => {
-        console.log("THIS IS FROM JS!");
-      });
+      addon.onAudioEnd(audioCallback);
     },
     play: () => {
       addon.playAudio();
     },
     pause: () => {
       addon.pauseAudio();
+    },
+    seek: (time) => {
+      addon.seekAudio(time);
+    },
+    onAudioEnd: (fn) => {
+      if (typeof fn !== "function") {
+        throw new Error(
+          "expected function for onAudioEnd callback, got",
+          typeof fn
+        );
+      }
+      callbackFns.push(fn);
+    },
+    wait: () => {
+      return new Promise((pResolve, pReject) => {
+        pWaitResolve = pResolve;
+      });
     },
   };
 
