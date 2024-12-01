@@ -1,2 +1,5 @@
-tests
+tests/**
 addon/build
+.vscode
+scripts/dist.js
+

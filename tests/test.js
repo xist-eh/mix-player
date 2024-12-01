@@ -1,11 +1,17 @@
-import { MixPlayer } from "../addon/binding.js";
+import { MixPlayer } from "../binding.js";
 
-MixPlayer.load("D:\\Dev\\blessed-player\\test-music\\bound2.mp3");
+console.log(MixPlayer.getAudioDevices());
 
-MixPlayer.play();
+MixPlayer.load("tests/test_audio.mp3");
 
-MixPlayer.seek(220);
+console.log(MixPlayer.getAudioDuration());
+
+MixPlayer.loop(true);
+
+MixPlayer.onAudioEnd(() => {
+  console.log("Audio ended! Now what?");
+});
 
 await MixPlayer.wait();
 
-console.log("ending program");
+process.exit(0);

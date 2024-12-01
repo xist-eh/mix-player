@@ -1,0 +1,21 @@
+//Builds native addon and adds it to a dist folder
+
+import { copyFileSync } from "node:fs";
+import { promisify } from "util";
+import { exec } from "child_process";
+const execute = promisify(exec);
+
+let destination_dist_folder;
+if (process.platform === "win32" || process.platform === "cygwin") {
+  destination_dist_folder = "dist/win";
+} else if (process.platform === "linux") {
+  destination_dist_folder = "dist/linux";
+} else if (process.platform === "darwin") {
+  destination_dist_folder = "dist/darwin";
+}
+
+await execute("npm run build");
+copyFileSync(
+  "./src/build/Release/mix-player-native.node",
+  destination_dist_folder + "/mix-player-native.node"
+);

@@ -6,8 +6,10 @@
   },
   "scripts": {
     "test": "node tests/test",
-    "build": "cd addon && rm -rf build && node-gyp configure build",
-    "install": "cd addon && node-gyp rebuild"
+    "build": "cd src && rm -rf build && node-gyp configure build",
+    "dist": "node scripts/dist.js",
+    "install": "node scripts/install.js",
+    "postinstall": "node scripts/postinstall.js"
   },
   "gypfile": true,
   "name": "mix-player",
