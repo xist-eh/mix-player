@@ -12,7 +12,16 @@ function importAddon(url) {
 
 if (DEVMODE) {
   importAddon("./src/build/Release/mix-player-native");
-} else {
-  importAddon("./dist/mix-player-native");
+} else if(process.platform === "win32"){
+  importAddon("./dist/win/mix-player-native");
+}
+else if(process.platform === "darwin"){
+  importAddon("./dist/darwin/mix-player-native");
+}
+else if(process.platform === "linux"){
+  importAddon("./dist/linux/mix-player-native");
+}
+else {
+  throw new Error("Precompiled binaries for Mix Player do not exist for your platform!");
 }
 export default addon;

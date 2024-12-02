@@ -3,6 +3,7 @@
 # Unique features
 
 - Cross platform - supports Windows, Linux, and MacOS
+- Works out of the box - no external dependencies* (Some Linux distros may require additional installation)
 - Supports FLAC, MP3, M4A, Ogg, VOC, and WAV files
 - Advanced control of playback through seek, volume, pause, fade in, and callback configurability
 - Allows control over playback device
