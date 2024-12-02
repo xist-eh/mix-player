@@ -2,8 +2,7 @@
 
 import { copyFileSync } from "node:fs";
 import { promisify } from "util";
-import { exec } from "child_process";
-const execute = promisify(exec);
+import { execSync } from "child_process";
 
 let destination_dist_folder;
 if (process.platform === "win32" || process.platform === "cygwin") {
@@ -14,7 +13,7 @@ if (process.platform === "win32" || process.platform === "cygwin") {
   destination_dist_folder = "dist/darwin";
 }
 
-await execute("npm run build");
+execSync("npm run build");
 copyFileSync(
   "./src/build/Release/mix-player-native.node",
   destination_dist_folder + "/mix-player-native.node"

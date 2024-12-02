@@ -1,6 +1,5 @@
 import { createRequire } from "module";
-
-const DEVMODE = false;
+import { DEVMODE } from "./config.js";
 
 let addon;
 

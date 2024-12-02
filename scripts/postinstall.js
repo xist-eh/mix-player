@@ -1,14 +1,11 @@
-import { exec } from "child_process";
+import { DEVMODE } from "../config.js";
 
-import { promisify } from "util";
-const execute = promisify(exec);
-
-const DEVMODE = true;
+import { rmSync } from "node:fs";
 
 async function cleanDist() {
-  await execute("rm -rf ./dist/darwin");
-  await execute("rm -rf ./dist/win");
-  await execute("rm -rf ./dist/linux");
+  rmSync("dist/win", { recursive: true, force: true });
+  rmSync("dist/darwin", { recursive: true, force: true });
+  rmSync("dist/linux", { recursive: true, force: true });
 }
 
 if (!DEVMODE) {

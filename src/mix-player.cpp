@@ -8,8 +8,25 @@
 #include "SDL_mixer.h"
 
 Mix_Music *audioTrack = nullptr;
+int msFadeInTime = 0;
 
 Napi::ThreadSafeFunction tsfn;
+
+void setFadeInPeriod(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+
+    if (info.Length() != 1)
+    {
+        napi_throw_error(env, 0, "Incorrect number of arguments passed!");
+    }
+    if (!info[0].IsNumber())
+    {
+        napi_throw_error(env, 0, "SetFadeInPeriod: expected number");
+    }
+
+    msFadeInTime = info[0].As<Napi::Number>().DoubleValue();
+}
 
 void onAudioEnd(const Napi::CallbackInfo &info)
 {
@@ -75,21 +92,14 @@ Napi::Boolean loadAudioFile(const Napi::CallbackInfo &info)
     {
         napi_throw_error(env, 0, "Incorrect number of arguments passed to playAudio!");
     }
-    if (!info[0].IsString() && !info[0].IsNull())
+    if (!info[0].IsString())
     {
         napi_throw_error(env, 0, "playAudio(): expected string or null as argument");
     }
 
-    if (!info[0].IsNull())
-    {
-        audioTrack = Mix_LoadMUS(info[0].As<Napi::String>().Utf8Value().c_str());
-    }
-    else
-    {
-        Mix_RewindMusic();
-    }
+    audioTrack = Mix_LoadMUS(info[0].As<Napi::String>().Utf8Value().c_str());
 
-    if (Mix_PlayMusic(audioTrack, 0) == 0)
+    if (Mix_FadeInMusic(audioTrack, 0, msFadeInTime) == 0)
     {
         success = true;
     }
@@ -170,6 +180,22 @@ Napi::Number getDuration(const Napi::CallbackInfo &info)
     return Napi::Number::New(env, Mix_MusicDuration(NULL));
 }
 
+void RewindAudio(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+    Mix_RewindMusic();
+    Mix_FadeInMusic(audioTrack, 0, msFadeInTime);
+}
+
+void destroy(const Napi::CallbackInfo &info)
+{
+    Mix_FreeMusic(audioTrack);
+    Mix_CloseAudio();
+    Mix_Quit();
+
+    SDL_Quit();
+}
+
 Napi::Object EntryPoint(Napi::Env env, Napi::Object exports)
 {
     int result = 0;
@@ -190,16 +216,19 @@ Napi::Object EntryPoint(Napi::Env env, Napi::Object exports)
 
     Mix_OpenAudio(48000, AUDIO_F32, 2, 2048);
 
+    exports.Set(Napi::String::New(env, "setFadeInPeriod"), Napi::Function::New(env, setFadeInPeriod));
     exports.Set(Napi::String::New(env, "onAudioEnd"), Napi::Function::New(env, onAudioEnd));
     exports.Set(Napi::String::New(env, "loadAudioFile"), Napi::Function::New(env, loadAudioFile));
     exports.Set(Napi::String::New(env, "isAudioPlaying"), Napi::Function::New(env, isPlaying));
     exports.Set(Napi::String::New(env, "playAudio"), Napi::Function::New(env, playAudio));
     exports.Set(Napi::String::New(env, "pauseAudio"), Napi::Function::New(env, pauseAudio));
     exports.Set(Napi::String::New(env, "seekAudio"), Napi::Function::New(env, seekAudio));
+    exports.Set(Napi::String::New(env, "rewindAudio"), Napi::Function::New(env, RewindAudio));
     exports.Set(Napi::String::New(env, "getAudioDevices"), Napi::Function::New(env, getAudioDevices));
     exports.Set(Napi::String::New(env, "setAudioDevice"), Napi::Function::New(env, setAudioDevice));
     exports.Set(Napi::String::New(env, "setVolume"), Napi::Function::New(env, setVolume));
     exports.Set(Napi::String::New(env, "getAudioDuration"), Napi::Function::New(env, getDuration));
+    exports.Set(Napi::String::New(env, "destroySDL"), Napi::Function::New(env, destroy));
 
     return exports;
 }

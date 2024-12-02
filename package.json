@@ -1,11 +1,8 @@
 {
   "main": "lib/binding.js",
   "type": "module",
-  "dependencies": {
-    "node-addon-api": "^1.1.0"
-  },
   "scripts": {
-    "test": "node tests/test",
+    "test": "node tests/simple",
     "build": "cd src && rm -rf build && node-gyp configure build",
     "dist": "node scripts/dist.js",
     "install": "node scripts/install.js",
@@ -26,5 +23,8 @@
     "m4a"
   ],
   "author": "existencing",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "node-addon-api": "^8.3.0"
+  }
 }

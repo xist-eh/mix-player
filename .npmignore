@@ -1,5 +1,6 @@
-tests/**
-addon/build
+tests/
+src/
 .vscode
 scripts/dist.js
+
 
