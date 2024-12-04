@@ -13,4 +13,4 @@ MixPlayer.onAudioEnd(() => {
 
 await MixPlayer.wait();
 
-process.exit(0);
+MixPlayer.destroy();

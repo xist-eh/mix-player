@@ -1,4 +1,4 @@
-#define NAPI_VERSION 8
+#define NAPI_VERSION 4
 
 #include "../node_modules/node-addon-api/napi.h"
 
@@ -111,23 +111,15 @@ Napi::Boolean isPlaying(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
 
-    return Napi::Boolean::New(env, Mix_PlayingMusic() == 0 ? false : true);
+    return Napi::Boolean::New(env, Mix_PlayingMusic() == 0 ? false : Mix_PausedMusic() == 1 ? false
+                                                                                            : true);
 }
 
-Napi::Boolean playAudio(const Napi::CallbackInfo &info)
+void playAudio(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
 
-    bool success = false;
-
-    if (audioTrack == nullptr || Mix_PlayingMusic() != 0)
-    {
-        return Napi::Boolean::New(env, success);
-    }
-
     Mix_ResumeMusic();
-
-    return Napi::Boolean::New(env, success);
 }
 
 void pauseAudio(const Napi::CallbackInfo &info)
@@ -153,6 +145,13 @@ void seekAudio(const Napi::CallbackInfo &info)
     double pos = info[0].As<Napi::Number>().DoubleValue();
 
     Mix_SetMusicPosition(pos);
+}
+
+Napi::Number getVolume(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+
+    return Napi::Number::New(env, Mix_VolumeMusic(-1));
 }
 
 void setVolume(const Napi::CallbackInfo &info)
@@ -189,6 +188,7 @@ void RewindAudio(const Napi::CallbackInfo &info)
 
 void destroy(const Napi::CallbackInfo &info)
 {
+    tsfn.Abort();
     Mix_FreeMusic(audioTrack);
     Mix_CloseAudio();
     Mix_Quit();
@@ -198,6 +198,15 @@ void destroy(const Napi::CallbackInfo &info)
 
 Napi::Object EntryPoint(Napi::Env env, Napi::Object exports)
 {
+
+#ifndef SDL_MAJOR_VERSION
+    napi_throw_error(env, 0, "SDL does not exist, which is required for MixPlayer. If you are on Linux, try installing it through apt (package should be SDL2)");
+#endif
+
+#ifndef SDL_MIXER_VERSION
+    napi_throw_error(env, 0, "SDL mixer does not exist, which is required for MixPlayer. If you are on Linux, try installing it through apt (package should be SDL2_mixer)");
+#endif
+
     int result = 0;
     int flags = MIX_INIT_MP3;
 
@@ -227,6 +236,7 @@ Napi::Object EntryPoint(Napi::Env env, Napi::Object exports)
     exports.Set(Napi::String::New(env, "getAudioDevices"), Napi::Function::New(env, getAudioDevices));
     exports.Set(Napi::String::New(env, "setAudioDevice"), Napi::Function::New(env, setAudioDevice));
     exports.Set(Napi::String::New(env, "setVolume"), Napi::Function::New(env, setVolume));
+    exports.Set(Napi::String::New(env, "getVolume"), Napi::Function::New(env, getVolume));
     exports.Set(Napi::String::New(env, "getAudioDuration"), Napi::Function::New(env, getDuration));
     exports.Set(Napi::String::New(env, "destroySDL"), Napi::Function::New(env, destroy));
 

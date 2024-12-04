@@ -22,8 +22,8 @@
           'copies': [{
             "destination": "build/Release",
             "files": [
-              "lib/dll/SDL2.dll",
-              "lib/dll/SDL2_mixer.dll"
+              "lib/win-dll/SDL2.dll",
+              "lib/win-dll/SDL2_mixer.dll"
             ]
           }],
           'msvs_settings': {

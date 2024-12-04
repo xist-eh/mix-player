@@ -1,17 +1,29 @@
 import { MixPlayer } from "../binding.js";
 
-console.log("Audio playback devices:", MixPlayer.getAudioDevices());
+let numPlayed = 0;
 
-MixPlayer.setVolume(10);
+console.log("Playing...");
 
 MixPlayer.play("tests/test_audio.mp3");
 
 MixPlayer.onAudioEnd(() => {
-  console.log("Finished audio for the first time");
-  MixPlayer.setFadeIn(2500);
-  MixPlayer.seek(MixPlayer.getAudioDuration() - 10);
+  if (numPlayed !== 0) {
+    MixPlayer.destroy();
+    console.log("Bye Bye!");
+    process.exit();
+  }
+  console.log("Rewinding...");
+  numPlayed++;
+
+  MixPlayer.setFadeIn(1500);
+  MixPlayer.rewind();
 
   setTimeout(() => {
+    console.log("pausing for a bit...");
     MixPlayer.pause();
-  }, 5000);
+  }, 3000);
+  setTimeout(() => {
+    console.log("Enjoy!");
+    MixPlayer.resume();
+  }, 6000);
 });

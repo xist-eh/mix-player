@@ -5,6 +5,8 @@ import path from "path";
 import addon from "./intermediary.js";
 
 function MixPlayer() {
+  let isDestroyed = false;
+
   let pWaitResolve;
   let loop = false;
 
@@ -16,14 +18,20 @@ function MixPlayer() {
      * @param {Number} ms Milliseconds to fade audio in
      * @description Sets the time period to fade newly played audio in before reaching full volume
      */
-    setFadeIn: (ms) => {
-      addon.setFadeInPeriod(ms);
+    setFadeIn: (msTime) => {
+      if (isDestroyed) {
+        throw new Error("MixPlayer has been destroyed!");
+      }
+      addon.setFadeInPeriod(msTime);
     },
     /**
      * @description Loads and plays an audio file from supported file types
      * @param {PathLike} file
      */
     play: (file) => {
+      if (isDestroyed) {
+        throw new Error("MixPlayer has been destroyed!");
+      }
       if (!file) {
         throw new Error("Expected string for MixPlayer.load()");
       }
@@ -34,22 +42,37 @@ function MixPlayer() {
 
       addon.loadAudioFile(file);
     },
+    isPlaying: () => {
+      if (isDestroyed) {
+        throw new Error("MixPlayer has been destroyed!");
+      }
+      return addon.isAudioPlaying();
+    },
     /**
      * @description Rewinds track to beginning.
      */
     rewind: () => {
+      if (isDestroyed) {
+        throw new Error("MixPlayer has been destroyed!");
+      }
       addon.rewindAudio();
     },
     /**
      * @description Resumes paused audio
      */
     resume: () => {
+      if (isDestroyed) {
+        throw new Error("MixPlayer has been destroyed!");
+      }
       addon.playAudio();
     },
     /**
      * @description pauses playing audio. Resolves promise from MixPlayer.wait().
      */
     pause: () => {
+      if (isDestroyed) {
+        throw new Error("MixPlayer has been destroyed!");
+      }
       addon.pauseAudio();
       if (pWaitResolve) {
         pWaitResolve();
@@ -59,7 +82,7 @@ function MixPlayer() {
      *
      * @returns Returns a list of playback device names. First element is the default playback device
      */
-    getAudioDevices: () => {
+    getOutputDevices: () => {
       return addon.getAudioDevices();
     },
     /**
@@ -68,6 +91,9 @@ function MixPlayer() {
      * @description Sets the output playback device. Note: If a selected playback device disconnects, then no audio is output
      */
     setPlaybackDevice: (index) => {
+      if (isDestroyed) {
+        throw new Error("MixPlayer has been destroyed!");
+      }
       addon.setAudioDevice(index);
     },
     /**
@@ -76,13 +102,22 @@ function MixPlayer() {
      * @description Sets the playback volume
      */
     setVolume: (vol) => {
+      if (isDestroyed) {
+        throw new Error("MixPlayer has been destroyed!");
+      }
       addon.setVolume(vol);
+    },
+    getVolume: () => {
+      return addon.getVolume();
     },
     /**
      *
      * @returns Returns total duration of current audio
      */
     getAudioDuration: () => {
+      if (isDestroyed) {
+        throw new Error("MixPlayer has been destroyed!");
+      }
       return addon.getAudioDuration();
     },
     /**
@@ -90,14 +125,28 @@ function MixPlayer() {
      * @param {Number} time Time to seek to
      * @description seeks current audio to specified time
      */
-    seek: (time) => {
-      addon.seekAudio(time);
+    seek: (secondsTime) => {
+      if (isDestroyed) {
+        throw new Error("MixPlayer has been destroyed!");
+      }
+      if (secondsTime < 0) {
+        throw new Error("Time to seek to cannot be negative!");
+      }
+      if (secondsTime > player.getAudioDuration()) {
+        throw new Error(
+          "Time to seek to is greater than duration of the current audio!"
+        );
+      }
+      addon.seekAudio(secondsTime);
     },
     /**
      *
      * @returns Promise that resolves when audio ends or is paused
      */
     wait: () => {
+      if (isDestroyed) {
+        throw new Error("MixPlayer has been destroyed!");
+      }
       if (!addon.isAudioPlaying()) {
         return new Promise((pResolve, pReject) => pResolve());
       }
@@ -111,6 +160,9 @@ function MixPlayer() {
      * @param {Boolean} bool Boolean on whether on not to loop audio
      */
     loop: (bool) => {
+      if (isDestroyed) {
+        throw new Error("MixPlayer has been destroyed!");
+      }
       loop = bool;
     },
     /**
@@ -118,6 +170,9 @@ function MixPlayer() {
      * @param {Function} fn
      */
     onAudioEnd: (fn) => {
+      if (isDestroyed) {
+        throw new Error("MixPlayer has been destroyed!");
+      }
       if (typeof fn !== "function") {
         throw new Error("expected fn");
       }
@@ -127,9 +182,11 @@ function MixPlayer() {
      * @description Destroys audio instance so program can safely exit
      */
     destroy: () => {
-      pWaitResolve = null;
-      addon.pauseAudio();
+      if (pWaitResolve) {
+        pWaitResolve();
+      }
       addon.destroySDL();
+      isDestroyed = true;
     },
   };
 
