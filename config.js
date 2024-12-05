@@ -1,1 +1,1 @@
-export const DEVMODE = true;
+export const DEVMODE = false;

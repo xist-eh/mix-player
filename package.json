@@ -1,5 +1,5 @@
 {
-  "main": "lib/binding.js",
+  "main": "binding.js",
   "type": "module",
   "scripts": {
     "test": "node tests/simple",
@@ -10,7 +10,7 @@
   },
   "gypfile": true,
   "name": "mix-player",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "cross platform & feature-rich audio player",
   "keywords": [
     "audio player",

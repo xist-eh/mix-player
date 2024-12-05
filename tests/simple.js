@@ -1,7 +1,7 @@
 import { MixPlayer } from "../binding.js";
 import assert from "node:assert/strict";
 
-console.log("Audio devices:", MixPlayer.getAudioDevices());
+console.log("Audio devices:", MixPlayer.getOutputDevices());
 
 MixPlayer.play("tests/test_audio.mp3");
 
