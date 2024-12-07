@@ -4,7 +4,7 @@
 
 - Cross platform - supports Windows, Linux, and MacOS
 - Works out of the box - no external dependencies\* (Some Linux distros may require additional installation) (MacOS binary is under development)
-- Supports FLAC, MP3, M4A, Ogg, VOC, and WAV files
+- Supports FLAC, MP3, Ogg, VOC, and WAV files
 - Advanced control of playback through seek, volume, pause, fade in, and callback configurability
 - Allows control over playback device
 
@@ -28,7 +28,7 @@ process.exit(0);
 
 ## MixPlayer.play(PathLike file)
 
-Plays a supported file type (FLAC, MP3, M4A, Ogg, VOC, and WAV). Will either use default system playback device or output device selected by MixPlayer.setPlaybackDevices().
+Plays a supported file type (FLAC, MP3, Ogg, VOC, and WAV). Will either use default system playback device or output device selected by MixPlayer.setPlaybackDevices().
 
 ## MixPlayer.pause()
 
@@ -61,6 +61,10 @@ Returns true if audio is currently playing. False otherwise.
 ## MixPlayer.getAudioDuration() -> Number
 
 Returns the total duration of current audio in seconds
+
+## MixPlayer.getAudioPosition() -> Number
+
+Get the time current position of audio stream, in seconds.
 
 ## MixPlayer.wait() -> Promise
 

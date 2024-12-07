@@ -141,7 +141,7 @@ function MixPlayer() {
     },
     /**
      *
-     * @returns Get the time current position of music stream, in seconds.
+     * @returns Get the time current position of audio stream, in seconds.
      */
     getAudioPosition: () => {
       return addon.getAudioPosition();
