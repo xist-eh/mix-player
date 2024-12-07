@@ -141,6 +141,13 @@ function MixPlayer() {
     },
     /**
      *
+     * @returns Get the time current position of music stream, in seconds.
+     */
+    getAudioPosition: () => {
+      return addon.getAudioPosition();
+    },
+    /**
+     *
      * @returns Promise that resolves when audio ends or is paused
      */
     wait: () => {

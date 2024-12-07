@@ -23,7 +23,11 @@ MixPlayer.onAudioEnd(() => {
     MixPlayer.pause();
   }, 3000);
   setTimeout(() => {
-    console.log("Enjoy!");
+    console.log(
+      "Resuming from",
+      MixPlayer.getAudioPosition(),
+      "seconds, Enjoy!"
+    );
     MixPlayer.resume();
   }, 6000);
 });

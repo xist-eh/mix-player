@@ -82,6 +82,13 @@ void setAudioDevice(const Napi::CallbackInfo &info)
     Mix_OpenAudioDevice(48000, AUDIO_F32, 2, 2048, SDL_GetAudioDeviceName(index, 0), SDL_AUDIO_ALLOW_FORMAT_CHANGE | SDL_AUDIO_ALLOW_SAMPLES_CHANGE);
 }
 
+Napi::Number getAudioPosition(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+
+    return Napi::Number::New(env, Mix_GetMusicPosition(audioTrack));
+}
+
 Napi::Boolean loadAudioFile(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
@@ -238,6 +245,7 @@ Napi::Object EntryPoint(Napi::Env env, Napi::Object exports)
     exports.Set(Napi::String::New(env, "setVolume"), Napi::Function::New(env, setVolume));
     exports.Set(Napi::String::New(env, "getVolume"), Napi::Function::New(env, getVolume));
     exports.Set(Napi::String::New(env, "getAudioDuration"), Napi::Function::New(env, getDuration));
+    exports.Set(Napi::String::New(env, "getAudioPosition"), Napi::Function::New(env, getAudioPosition));
     exports.Set(Napi::String::New(env, "destroySDL"), Napi::Function::New(env, destroy));
 
     return exports;
