@@ -51,8 +51,6 @@ Napi::Number createNewSound(const Napi::CallbackInfo &info)
         return Napi::Number::New(env, -1);
     }
 
-    sounds.emplace_back();
-
     return Napi::Number::New(env, soundIndex);
 }
 
