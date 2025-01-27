@@ -15,7 +15,7 @@
 
 ma_engine engine;
 // ma_engine_get_sample_rate(&engine)
-std::vector<ma_sound> sounds;
+std::vector<std::unique_ptr<ma_sound>> sounds;
 ma_uint32 sampleRate;
 
 ma_context context;
@@ -35,23 +35,18 @@ Napi::Number createNewSound(const Napi::CallbackInfo &info)
         Napi::TypeError::New(env, "Expected a string as first argument").ThrowAsJavaScriptException();
         return Napi::Number::New(env, -1);
     }
-    ma_result result;
 
-    sounds.emplace_back();
+    auto sound = std::make_unique<ma_sound>();
 
-    unsigned int soundIndex = sounds.size() - 1;
-
-    ma_sound *sound_ptr = &(sounds.at(soundIndex));
-
-    std::cout << "Sound at" << sound_ptr << "\n";
-
-    result = ma_sound_init_from_file(&engine, info[0].As<Napi::String>().ToString().Utf8Value().c_str(), 0, NULL, NULL, sound_ptr);
+    ma_result result = ma_sound_init_from_file(&engine, info[0].As<Napi::String>().ToString().Utf8Value().c_str(), 0, NULL, NULL, sound.get());
     if (result != MA_SUCCESS)
     {
         return Napi::Number::New(env, -1);
     }
 
-    return Napi::Number::New(env, soundIndex);
+    sounds.push_back(std::move(sound));
+
+    return Napi::Number::New(env, sounds.size() - 1);
 }
 
 // Expected arguments - soundId: integer
@@ -66,7 +61,7 @@ Napi::Boolean playSound(const Napi::CallbackInfo &info)
         return Napi::Boolean::New(env, false);
     }
 
-    ma_sound_start(&(sounds.at(info[0].ToNumber().Int32Value())));
+    ma_sound_start(sounds.at(info[0].ToNumber().Int32Value()).get());
 
     return Napi::Boolean::New(env, true);
 }
@@ -80,7 +75,7 @@ Napi::Boolean pauseSound(const Napi::CallbackInfo &info)
         return Napi::Boolean::New(env, false);
     }
 
-    ma_sound_stop(&(sounds.at(info[0].ToNumber().Int32Value())));
+    ma_sound_stop(sounds.at(info[0].ToNumber().Int32Value()).get());
 
     return Napi::Boolean::New(env, true);
 }
@@ -96,7 +91,7 @@ Napi::Number getSoundDuration(const Napi::CallbackInfo &info)
     }
 
     int32_t soundIndex = info[0].ToNumber().Int32Value();
-    ma_sound *sound = &(sounds.at(soundIndex));
+    ma_sound *sound = sounds.at(soundIndex).get();
 
     ma_uint64 lengthInFrames;
     ma_result result = ma_sound_get_length_in_pcm_frames(sound, &lengthInFrames);
