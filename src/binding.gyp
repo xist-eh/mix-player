@@ -17,23 +17,7 @@
           },
         }
         ],
-        ["OS==\"win\"", {      
-          'libraries': [ "../lib/win-dll/SDL2.lib", "../lib/win-dll/SDL2main.lib", "../lib/win-dll/SDL2_mixer.lib"],
-          'copies': [{
-            "destination": "build/Release",
-            "files": [
-              "lib/win-dll/SDL2.dll",
-              "lib/win-dll/SDL2_mixer.dll"
-            ]
-          }],
-          'msvs_settings': {
-            'VCCLCompilerTool': { 'ExceptionHandling': 1 },
-          },
-        }
-        ],
-        ["OS==\"linux\"", {
-          'libraries': [ "-lSDL2main", "-lSDL2 ", "-lSDL2_mixer"],
-        }]
+
       ]
     }
   ]

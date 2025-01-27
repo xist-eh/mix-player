@@ -82,7 +82,7 @@ Sets the amount of time taken to go from silence to full volume. Default is 0 ms
 
 Switches the option to loop current audio when it ends. If looping is enabled, then the promise from MixPlayer.wait() will not resolve after audio ends.
 
-## MixPlayer.getOutputDevices() -> String[]
+## getOutputDevices() -> String[]
 
 Returns an array of available playback device names. The first element is the default system playback device.
 

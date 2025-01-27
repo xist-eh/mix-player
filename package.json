@@ -10,7 +10,7 @@
   },
   "gypfile": true,
   "name": "mix-player",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "cross platform & feature-rich audio player",
   "keywords": [
     "audio player",
