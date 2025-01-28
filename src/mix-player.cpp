@@ -1,4 +1,4 @@
-#define NAPI_VERSION 4
+#define NAPI_VERSION 5
 
 #define NODE_ADDON_API_CPP_EXCEPTIONS 1
 #define MA_NO_ENCODING
@@ -12,41 +12,109 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <unordered_map>
 
 ma_engine engine;
-// ma_engine_get_sample_rate(&engine)
-std::vector<std::unique_ptr<ma_sound>> sounds;
 ma_uint32 sampleRate;
 
 ma_context context;
 ma_device_info *pPlaybackInfos;
 ma_uint32 playbackDeviceCount;
 
+class MixSound
+{
+private:
+    std::string audioFilePath;
+    ma_sound maMixSound;
+    float duration;
+    Napi::ThreadSafeFunction tsfnCallback;
+
+    static void onAudioEnd(void *thisInstance, ma_sound *pSound)
+    {
+        std::cout << "Audio ended, had a duration of " << &thisInstance << "\n";
+    }
+
+public:
+    MixSound(std::string audioPath, Napi::ThreadSafeFunction callback)
+    {
+        audioFilePath = audioPath;
+        tsfnCallback = callback;
+
+        ma_result result = ma_sound_init_from_file(&engine, audioFilePath.c_str(), 0, NULL, NULL, &maMixSound);
+
+        if (result != MA_SUCCESS)
+        {
+            throw std::runtime_error("Failed to load audio file");
+        }
+
+        ma_uint64 lengthInFrames;
+        if (ma_sound_get_length_in_pcm_frames(&maMixSound, &lengthInFrames) != MA_SUCCESS)
+        {
+            throw std::runtime_error("Failed to get sound length");
+        }
+
+        duration = (double)lengthInFrames / sampleRate;
+
+        int a = 10;
+
+        ma_sound_set_end_callback(&maMixSound, onAudioEnd, &a);
+    }
+    float getDuration()
+    {
+        return duration;
+    }
+    void play()
+    {
+        ma_sound_start(&maMixSound);
+    }
+    void pause()
+    {
+        ma_sound_stop(&maMixSound);
+    }
+};
+
+std::unordered_map<int, std::unique_ptr<MixSound>> soundMap;
+
 // Napi::ThreadSafeFunction tsfn;
 
-// Expected arguments - audioFilePath: string
+// Expected arguments - audioFilePath: string, id: integer
 // Returns: soundId - integer OR -1 if failed
 Napi::Number createNewSound(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
 
-    if (info.Length() < 1 || !info[0].IsString())
+    if (info.Length() != 3)
+    {
+        Napi::TypeError::New(env, "Expected 2 arguments").ThrowAsJavaScriptException();
+        return Napi::Number::New(env, -1);
+    }
+
+    if (!info[0].IsString())
     {
         Napi::TypeError::New(env, "Expected a string as first argument").ThrowAsJavaScriptException();
         return Napi::Number::New(env, -1);
     }
 
-    auto sound = std::make_unique<ma_sound>();
-
-    ma_result result = ma_sound_init_from_file(&engine, info[0].As<Napi::String>().ToString().Utf8Value().c_str(), 0, NULL, NULL, sound.get());
-    if (result != MA_SUCCESS)
+    if (!info[1].IsNumber())
     {
+        Napi::TypeError::New(env, "Expected a number as second argument").ThrowAsJavaScriptException();
+        return Napi::Number::New(env, -1);
+    }
+    if (!info[2].IsFunction())
+    {
+        Napi::TypeError::New(env, "Expected a function as third argument").ThrowAsJavaScriptException();
         return Napi::Number::New(env, -1);
     }
 
-    sounds.push_back(std::move(sound));
+    std::string audioFilePath = info[0].As<Napi::String>().Utf8Value();
+    int id = info[1].As<Napi::Number>().Int32Value();
+    Napi::ThreadSafeFunction tsfn = Napi::ThreadSafeFunction::New(env, info[2].As<Napi::Function>(), "TSFN", 0, 3);
 
-    return Napi::Number::New(env, sounds.size() - 1);
+    auto newSound = std::make_unique<MixSound>(audioFilePath, tsfn);
+
+    soundMap[id] = std::move(newSound);
+
+    return Napi::Number::New(env, 1);
 }
 
 // Expected arguments - soundId: integer
@@ -55,27 +123,11 @@ Napi::Boolean playSound(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
 
-    if (info.Length() < 1 || !info[0].IsNumber())
-    {
-        Napi::TypeError::New(env, "Expected a number as first argument").ThrowAsJavaScriptException();
-        return Napi::Boolean::New(env, false);
-    }
-
-    ma_sound_start(sounds.at(info[0].ToNumber().Int32Value()).get());
-
     return Napi::Boolean::New(env, true);
 }
 Napi::Boolean pauseSound(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
-
-    if (info.Length() < 1 || !info[0].IsNumber())
-    {
-        Napi::TypeError::New(env, "Expected a number as first argument").ThrowAsJavaScriptException();
-        return Napi::Boolean::New(env, false);
-    }
-
-    ma_sound_stop(sounds.at(info[0].ToNumber().Int32Value()).get());
 
     return Napi::Boolean::New(env, true);
 }
@@ -84,26 +136,7 @@ Napi::Number getSoundDuration(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
 
-    if (info.Length() < 1 || !info[0].IsNumber())
-    {
-        Napi::TypeError::New(env, "Expected a number as first argument").ThrowAsJavaScriptException();
-        return Napi::Number::New(env, -1);
-    }
-
-    int32_t soundIndex = info[0].ToNumber().Int32Value();
-    ma_sound *sound = sounds.at(soundIndex).get();
-
-    ma_uint64 lengthInFrames;
-    ma_result result = ma_sound_get_length_in_pcm_frames(sound, &lengthInFrames);
-    if (result != MA_SUCCESS)
-    {
-        Napi::Error::New(env, "Failed to get sound length").ThrowAsJavaScriptException();
-        return Napi::Number::New(env, -1);
-    }
-
-    double durationInSeconds = (double)lengthInFrames / sampleRate;
-
-    return Napi::Number::New(env, durationInSeconds);
+    return Napi::Number::New(env, 0);
 }
 
 Napi::Boolean initAudioEngine(const Napi::CallbackInfo &info)
