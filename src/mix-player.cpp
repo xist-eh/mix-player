@@ -29,9 +29,11 @@ private:
     float duration;
     Napi::ThreadSafeFunction tsfnCallback;
 
-    static void onAudioEnd(void *thisInstance, ma_sound *pSound)
+    static void onAudioEnd(void *passed, ma_sound *pSound)
     {
-        std::cout << "Audio ended, had a duration of " << &thisInstance << "\n";
+
+        Napi::ThreadSafeFunction tsfn = *(Napi::ThreadSafeFunction *)passed;
+        tsfn.NonBlockingCall();
     }
 
 public:
@@ -55,9 +57,7 @@ public:
 
         duration = (double)lengthInFrames / sampleRate;
 
-        int a = 10;
-
-        ma_sound_set_end_callback(&maMixSound, onAudioEnd, &a);
+        ma_sound_set_end_callback(&maMixSound, onAudioEnd, &tsfnCallback);
     }
     float getDuration()
     {
@@ -113,6 +113,8 @@ Napi::Number createNewSound(const Napi::CallbackInfo &info)
     auto newSound = std::make_unique<MixSound>(audioFilePath, tsfn);
 
     soundMap[id] = std::move(newSound);
+
+    soundMap[id]->play();
 
     return Napi::Number::New(env, 1);
 }

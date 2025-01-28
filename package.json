@@ -2,7 +2,7 @@
   "main": "binding.js",
   "type": "module",
   "scripts": {
-    "test": "node tests/simple",
+    "test": "node tests/current",
     "build": "cd src && rm -rf build && node-gyp configure build",
     "dist": "node scripts/dist.js",
     "install": "node scripts/install.js",

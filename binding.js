@@ -20,7 +20,9 @@ export function createAudio(filePath) {
       "File (" + filePath + ") used in createAudio() does not exist!"
     );
   }
-  const audioIndex = addon.createNewSound(filePath);
+  const audioIndex = addon.createNewSound(filePath, 111, () => {
+    console.log("HELLO");
+  });
 
   if (audioIndex === -1) {
     return null;
