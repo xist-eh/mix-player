@@ -77,6 +77,44 @@ public:
     {
         ma_sound_stop(&maMixSound);
     }
+    void seek(float position)
+    {
+        ma_sound_seek_to_pcm_frame(&maMixSound, (ma_uint64)(position * sampleRate));
+    }
+    float getTrackPosition()
+    {
+        ma_uint64 position;
+        ma_sound_get_cursor_in_pcm_frames(&maMixSound, &position);
+        return (double)position / sampleRate;
+    }
+    void setVolume(float volume)
+    {
+        ma_sound_set_volume(&maMixSound, ma_volume_db_to_linear(volume));
+    }
+    float getVolume()
+    {
+        return ma_volume_linear_to_db(ma_sound_get_volume(&maMixSound));
+    }
+    void setLooping(bool loop)
+    {
+        ma_sound_set_looping(&maMixSound, loop);
+    }
+    void setPitch(float pitch)
+    {
+        ma_sound_set_pitch(&maMixSound, pitch);
+    }
+    void setPan(float pan)
+    {
+        ma_sound_set_pan(&maMixSound, pan);
+    }
+    float getPan()
+    {
+        return ma_sound_get_pan(&maMixSound);
+    }
+    float getPitch()
+    {
+        return ma_sound_get_pitch(&maMixSound);
+    }
 };
 
 std::unordered_map<int, std::unique_ptr<MixSound>> soundMap;
@@ -110,6 +148,8 @@ Napi::Number createNewSound(const Napi::CallbackInfo &info)
 
     std::string audioFilePath = info[0].As<Napi::String>().Utf8Value();
     Napi::ThreadSafeFunction tsfn = Napi::ThreadSafeFunction::New(env, info[1].As<Napi::Function>(), "TSFN", 0, 3);
+
+    tsfn.Unref(env);
 
     auto newSound = std::make_unique<MixSound>(audioFilePath, tsfn);
     numSounds++;
@@ -189,6 +229,50 @@ Napi::Boolean pauseSound(const Napi::CallbackInfo &info)
     return Napi::Boolean::New(env, true);
 }
 
+Napi::Boolean seekSound(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+
+    if (info.Length() != 2 && !info[0].IsNumber() && !info[1].IsNumber())
+    {
+        Napi::TypeError::New(env, "Expected a number as first argument").ThrowAsJavaScriptException();
+        return Napi::Boolean::New(env, false);
+    }
+
+    int soundId = info[0].As<Napi::Number>().Int32Value();
+    float position = info[1].As<Napi::Number>().FloatValue();
+
+    if (soundMap.find(soundId) == soundMap.end())
+    {
+        Napi::TypeError::New(env, "Sound not found").ThrowAsJavaScriptException();
+        return Napi::Boolean::New(env, false);
+    }
+
+    soundMap[soundId]->seek(position);
+
+    return Napi::Boolean::New(env, true);
+}
+
+Napi::Number getSoundPosition(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+    if (info.Length() != 1 && !info[0].IsNumber())
+    {
+        Napi::TypeError::New(env, "Expected a number as first argument").ThrowAsJavaScriptException();
+        return Napi::Number::New(env, -1);
+    }
+
+    int soundId = info[0].As<Napi::Number>().Int32Value();
+
+    if (soundMap.find(soundId) == soundMap.end())
+    {
+        Napi::TypeError::New(env, "Sound not found").ThrowAsJavaScriptException();
+        return Napi::Number::New(env, -1);
+    }
+
+    return Napi::Number::New(env, soundMap[soundId]->getTrackPosition());
+}
+
 Napi::Number getSoundDuration(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
@@ -207,6 +291,74 @@ Napi::Number getSoundDuration(const Napi::CallbackInfo &info)
     }
 
     return Napi::Number::New(env, soundMap[soundId]->getDuration());
+}
+
+Napi::Boolean setSoundVolume(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+
+    if (info.Length() != 2 && !info[0].IsNumber() && !info[1].IsNumber())
+    {
+        Napi::TypeError::New(env, "Expected a number as first argument").ThrowAsJavaScriptException();
+        return Napi::Boolean::New(env, false);
+    }
+
+    int soundId = info[0].As<Napi::Number>().Int32Value();
+    float volume = info[1].As<Napi::Number>().FloatValue();
+
+    if (soundMap.find(soundId) == soundMap.end())
+    {
+        Napi::TypeError::New(env, "Sound not found").ThrowAsJavaScriptException();
+        return Napi::Boolean::New(env, false);
+    }
+
+    soundMap[soundId]->setVolume(volume);
+
+    return Napi::Boolean::New(env, true);
+}
+
+Napi::Number getSoundVolume(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+    if (info.Length() != 1 && !info[0].IsNumber())
+    {
+        Napi::TypeError::New(env, "Expected a number as first argument").ThrowAsJavaScriptException();
+        return Napi::Number::New(env, -1);
+    }
+
+    int soundId = info[0].As<Napi::Number>().Int32Value();
+
+    if (soundMap.find(soundId) == soundMap.end())
+    {
+        Napi::TypeError::New(env, "Sound not found").ThrowAsJavaScriptException();
+        return Napi::Number::New(env, -1);
+    }
+
+    return Napi::Number::New(env, soundMap[soundId]->getVolume());
+}
+
+Napi::Boolean setSoundLooping(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+
+    if (info.Length() != 2 && !info[0].IsNumber() && !info[1].IsBoolean())
+    {
+        Napi::TypeError::New(env, "Expected a number as first argument").ThrowAsJavaScriptException();
+        return Napi::Boolean::New(env, false);
+    }
+
+    int soundId = info[0].As<Napi::Number>().Int32Value();
+    bool loop = info[1].As<Napi::Boolean>().Value();
+
+    if (soundMap.find(soundId) == soundMap.end())
+    {
+        Napi::TypeError::New(env, "Sound not found").ThrowAsJavaScriptException();
+        return Napi::Boolean::New(env, false);
+    }
+
+    soundMap[soundId]->setLooping(loop);
+
+    return Napi::Boolean::New(env, true);
 }
 
 Napi::Boolean initAudioEngine(const Napi::CallbackInfo &info)
@@ -258,6 +410,11 @@ Napi::Object EntryPoint(Napi::Env env, Napi::Object exports)
     exports.Set(Napi::String::New(env, "playSound"), Napi::Function::New(env, playSound));
     exports.Set(Napi::String::New(env, "pauseSound"), Napi::Function::New(env, pauseSound));
     exports.Set(Napi::String::New(env, "getSoundDuration"), Napi::Function::New(env, getSoundDuration));
+    exports.Set(Napi::String::New(env, "getSoundPosition"), Napi::Function::New(env, getSoundPosition));
+    exports.Set(Napi::String::New(env, "setSoundVolume"), Napi::Function::New(env, setSoundVolume));
+    exports.Set(Napi::String::New(env, "getSoundVolume"), Napi::Function::New(env, getSoundVolume));
+    exports.Set(Napi::String::New(env, "setSoundLooping"), Napi::Function::New(env, setSoundLooping));
+    exports.Set(Napi::String::New(env, "seekSound"), Napi::Function::New(env, seekSound));
     exports.Set(Napi::String::New(env, "getPlaybackDevices"), Napi::Function::New(env, getPlaybackDevices));
 
     // exports.Set(Napi::String::New(env, "setFadeInPeriod"), Napi::Function::New(env, setFadeInPeriod));

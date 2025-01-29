@@ -31,6 +31,7 @@ export function createAudio(filePath) {
     }
     if (awaitPromiseResolver) {
       awaitPromiseResolver();
+      awaitPromiseResolver = null;
     }
   });
 
@@ -48,10 +49,25 @@ export function createAudio(filePath) {
     pause: () => {
       isPlaying = false;
 
-      addon.pauseSound(audioIndex);
+      return addon.pauseSound(audioIndex);
+    },
+    setLooping: (loop) => {
+      return addon.setSoundLooping(audioIndex, loop);
+    },
+    setVolume: (volume) => {
+      return addon.setSoundVolume(audioIndex, volume);
+    },
+    getVolume: () => {
+      return addon.getSoundVolume(audioIndex);
     },
     getDuration: () => {
       return addon.getSoundDuration(audioIndex);
+    },
+    getTrackPosition: () => {
+      return addon.getSoundPosition(audioIndex);
+    },
+    onAudioEnd: (callback) => {
+      audioEndCallbacks.push(callback);
     },
     destroy: () => {
       addon.destroySound(audioIndex);
@@ -64,12 +80,8 @@ export function createAudio(filePath) {
       }
     },
     wait() {
-      return new Promise((resolve) => {
-        if (!isPlaying) {
-          resolve();
-          return;
-        }
-        awaitPromiseResolver = resolve;
+      return new Promise((resolve, reject) => {
+        setTimeout(resolve, 10000);
       });
     },
   };
