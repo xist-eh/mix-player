@@ -20,8 +20,18 @@ export function createAudio(filePath) {
       "File (" + filePath + ") used in createAudio() does not exist!"
     );
   }
-  const audioIndex = addon.createNewSound(filePath, 111, () => {
-    console.log("HELLO");
+
+  let isPlaying = false;
+  let audioEndCallbacks = [];
+  let awaitPromiseResolver = null;
+
+  const audioIndex = addon.createNewSound(filePath, () => {
+    for (let callback of audioEndCallbacks) {
+      callback();
+    }
+    if (awaitPromiseResolver) {
+      awaitPromiseResolver();
+    }
   });
 
   if (audioIndex === -1) {
@@ -30,15 +40,39 @@ export function createAudio(filePath) {
 
   console.log("created audio with index:", audioIndex);
 
-  return {
+  const factory = {
     play: () => {
+      isPlaying = true;
       addon.playSound(audioIndex);
     },
     pause: () => {
+      isPlaying = false;
+
       addon.pauseSound(audioIndex);
     },
     getDuration: () => {
       return addon.getSoundDuration(audioIndex);
     },
+    destroy: () => {
+      addon.destroySound(audioIndex);
+      filePath = null;
+      isPlaying = false;
+      audioEndCallbacks = [];
+      awaitPromiseResolver = null;
+      for (const key of Object.keys(factory)) {
+        delete factory[key];
+      }
+    },
+    wait() {
+      return new Promise((resolve) => {
+        if (!isPlaying) {
+          resolve();
+          return;
+        }
+        awaitPromiseResolver = resolve;
+      });
+    },
   };
+
+  return factory;
 }
