@@ -4,4 +4,16 @@ const audio = MixPlayer.createAudio("tests/test_audio.mp3");
 
 audio.play();
 
-setTimeout(() => {}, 10000);
+audio.onAudioEnd(() => {
+  console.log("Audio ended! Now what?");
+});
+
+await audio.wait();
+
+audio.seek(0);
+
+audio.play();
+
+await audio.wait();
+
+console.log("Audio ended! its the end");

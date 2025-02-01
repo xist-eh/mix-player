@@ -25,15 +25,7 @@ function createAudio(filePath) {
   let audioEndCallbacks = [];
   let awaitPromiseResolver = null;
 
-  const audioIndex = addon.createNewSound(filePath, () => {
-    for (let callback of audioEndCallbacks) {
-      callback();
-    }
-    if (awaitPromiseResolver) {
-      awaitPromiseResolver();
-      awaitPromiseResolver = null;
-    }
-  });
+  const audioIndex = addon.createNewSound(filePath);
 
   if (audioIndex === -1) {
     return null;
@@ -48,6 +40,11 @@ function createAudio(filePath) {
     },
     pause: () => {
       isPlaying = false;
+
+      if (awaitPromiseResolver) {
+        awaitPromiseResolver();
+        awaitPromiseResolver = null;
+      }
 
       return addon.pauseSound(audioIndex);
     },
@@ -72,7 +69,14 @@ function createAudio(filePath) {
     getTrackPosition: () => {
       return addon.getSoundPosition(audioIndex);
     },
-    onAudioEnd: (callback) => {
+    onAudioEnd: (callback, callOnce = false) => {
+      if (callOnce) {
+        const index = audioEndCallbacks.push(() => {
+          callback();
+          audioEndCallbacks.splice(index, 1);
+        });
+        return;
+      }
       audioEndCallbacks.push(callback);
     },
     destroy: () => {
@@ -87,10 +91,24 @@ function createAudio(filePath) {
     },
     wait() {
       return new Promise((resolve, reject) => {
-        setTimeout(resolve, 10000);
+        const timeout = setTimeout(reject, 1000 * 60 * 60 * 24);
+        awaitPromiseResolver = () => {
+          clearTimeout(timeout);
+          resolve();
+        };
       });
     },
   };
+
+  addon.setAudioEndCallback(audioIndex, () => {
+    for (let callback of audioEndCallbacks) {
+      callback();
+    }
+    if (awaitPromiseResolver) {
+      awaitPromiseResolver();
+      awaitPromiseResolver = null;
+    }
+  });
 
   return factory;
 }

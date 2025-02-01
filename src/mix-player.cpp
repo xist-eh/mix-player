@@ -27,20 +27,24 @@ private:
     std::string audioFilePath;
     ma_sound maMixSound;
     float duration;
-    Napi::ThreadSafeFunction tsfnCallback;
+    Napi::ThreadSafeFunction tsfnCallback = NULL;
 
     static void onAudioEnd(void *passed, ma_sound *pSound)
     {
 
         Napi::ThreadSafeFunction tsfn = *(Napi::ThreadSafeFunction *)passed;
+
+        if (tsfn == NULL)
+        {
+            return;
+        }
         tsfn.NonBlockingCall();
     }
 
 public:
-    MixSound(std::string audioPath, Napi::ThreadSafeFunction callback)
+    MixSound(std::string audioPath)
     {
         audioFilePath = audioPath;
-        tsfnCallback = callback;
 
         ma_result result = ma_sound_init_from_file(&engine, audioFilePath.c_str(), 0, NULL, NULL, &maMixSound);
 
@@ -56,7 +60,6 @@ public:
         }
 
         duration = (double)lengthInFrames / sampleRate;
-
         ma_sound_set_end_callback(&maMixSound, onAudioEnd, &tsfnCallback);
     }
     ~MixSound()
@@ -115,6 +118,10 @@ public:
     {
         return ma_sound_get_pitch(&maMixSound);
     }
+    void setAudioEndCallback(Napi::ThreadSafeFunction callback)
+    {
+        tsfnCallback = callback;
+    }
 };
 
 std::unordered_map<int, std::unique_ptr<MixSound>> soundMap;
@@ -128,7 +135,7 @@ Napi::Number createNewSound(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
 
-    if (info.Length() != 2)
+    if (info.Length() != 1)
     {
         Napi::TypeError::New(env, "Expected 2 arguments").ThrowAsJavaScriptException();
         return Napi::Number::New(env, -1);
@@ -140,23 +147,39 @@ Napi::Number createNewSound(const Napi::CallbackInfo &info)
         return Napi::Number::New(env, -1);
     }
 
-    if (!info[1].IsFunction())
-    {
-        Napi::TypeError::New(env, "Expected a function as third argument").ThrowAsJavaScriptException();
-        return Napi::Number::New(env, -1);
-    }
-
     std::string audioFilePath = info[0].As<Napi::String>().Utf8Value();
-    Napi::ThreadSafeFunction tsfn = Napi::ThreadSafeFunction::New(env, info[1].As<Napi::Function>(), "TSFN", 0, 3);
 
-    tsfn.Unref(env);
-
-    auto newSound = std::make_unique<MixSound>(audioFilePath, tsfn);
+    auto newSound = std::make_unique<MixSound>(audioFilePath);
     numSounds++;
 
     soundMap[numSounds] = std::move(newSound);
 
     return Napi::Number::New(env, numSounds);
+}
+
+Napi::Boolean setAudioEndCallback(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+
+    if (info.Length() != 2 && !info[0].IsNumber() && !info[1].IsFunction())
+    {
+        Napi::TypeError::New(env, "Expected a number as first argument and a function as second argument").ThrowAsJavaScriptException();
+        return Napi::Boolean::New(env, false);
+    }
+
+    int soundId = info[0].As<Napi::Number>().Int32Value();
+    Napi::ThreadSafeFunction tsfn = Napi::ThreadSafeFunction::New(env, info[1].As<Napi::Function>(), "TSFN", 0, 3);
+
+    tsfn.Unref(env);
+    if (soundMap.find(soundId) == soundMap.end())
+    {
+        Napi::TypeError::New(env, "Sound not found").ThrowAsJavaScriptException();
+        return Napi::Boolean::New(env, false);
+    }
+
+    soundMap[soundId]->setAudioEndCallback(tsfn);
+
+    return Napi::Boolean::New(env, true);
 }
 
 Napi::Boolean destroySound(const Napi::CallbackInfo &info)
@@ -406,6 +429,7 @@ Napi::Object EntryPoint(Napi::Env env, Napi::Object exports)
 
     exports.Set(Napi::String::New(env, "initAudioEngine"), Napi::Function::New(env, initAudioEngine));
     exports.Set(Napi::String::New(env, "createNewSound"), Napi::Function::New(env, createNewSound));
+    exports.Set(Napi::String::New(env, "setAudioEndCallback"), Napi::Function::New(env, setAudioEndCallback));
     exports.Set(Napi::String::New(env, "destroySound"), Napi::Function::New(env, destroySound));
     exports.Set(Napi::String::New(env, "playSound"), Napi::Function::New(env, playSound));
     exports.Set(Napi::String::New(env, "pauseSound"), Napi::Function::New(env, pauseSound));
