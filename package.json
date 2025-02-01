@@ -1,6 +1,9 @@
 {
   "main": "binding.js",
   "type": "module",
+  "dependencies": {
+    "node-addon-api": "^1.1.0"
+  },
   "scripts": {
     "test": "node tests/current",
     "build": "cd src && rm -rf build && node-gyp configure build",
@@ -17,7 +20,11 @@
     "audio",
     "player",
     "music player",
+    "music player",
     "music",
+    "speaker",
+    "mp3",
+    "m4a"
     "speaker",
     "mp3",
     "m4a"
