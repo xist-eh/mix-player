@@ -5,15 +5,15 @@ import path from "path";
 import addon from "./intermediary.js";
 import { get } from "http";
 
-export function getPlaybackDevices() {
+function getPlaybackDevices() {
   return addon.getPlaybackDevices();
 }
 
-export function initializeMixPlayer() {
+function initializeMixPlayer() {
   addon.initAudioEngine();
 }
 
-export function createAudio(filePath) {
+function createAudio(filePath) {
   filePath = path.resolve(filePath);
   if (!existsSync(filePath)) {
     throw new Error(
@@ -88,3 +88,15 @@ export function createAudio(filePath) {
 
   return factory;
 }
+
+const MixPlayerFactory = () => {
+  initializeMixPlayer();
+  return {
+    createAudio,
+    getPlaybackDevices,
+  };
+};
+
+const MixPlayer = MixPlayerFactory();
+
+export default MixPlayer;
