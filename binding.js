@@ -98,6 +98,9 @@ function createAudio(filePath) {
         };
       });
     },
+    isPlaying: () => {
+      return isPlaying;
+    },
   };
 
   addon.setAudioEndCallback(audioIndex, () => {

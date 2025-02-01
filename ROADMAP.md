@@ -3,6 +3,8 @@
 ## Top priorities
 
 1. Change output device
+2. Fix band-aid to make .wait() work
+3. Switch JS bridge to TypeScript
 
 ## Nice to haves
 

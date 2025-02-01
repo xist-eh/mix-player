@@ -1,16 +1,22 @@
-import { MixPlayer } from "../binding.js";
+import MixPlayer from "../binding.js";
 import assert from "node:assert/strict";
 
-console.log("Audio devices:", MixPlayer.getOutputDevices());
+console.log("Audio devices:", MixPlayer.getPlaybackDevices());
 
-MixPlayer.play("tests/test_audio.mp3");
+const audio = MixPlayer.createAudio("tests/test_audio.mp3");
 
-assert.strictEqual(Math.round(MixPlayer.getAudioDuration()), 7);
+audio.play();
 
-MixPlayer.onAudioEnd(() => {
+audio.setVolume(-10);
+
+console.log("Volume:", audio.getVolume());
+
+assert.strictEqual(Math.round(audio.getDuration()), 7);
+
+audio.onAudioEnd(() => {
   console.log("Audio ended! Now what?");
 });
 
-await MixPlayer.wait();
+await audio.wait();
 
-MixPlayer.destroy();
+audio.destroy();

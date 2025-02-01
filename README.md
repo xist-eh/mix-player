@@ -13,83 +13,73 @@
 ```javascript
 import { MixPlayer } from "MixPlayer";
 
-MixPlayer.play("test_audio.mp3");
+const audio = MixPlayer.createAudio("test_audio.mp3");
 
 MixPlayer.onAudioEnd(() => {
   console.log("Audio ended! Now what?");
 });
 
-await MixPlayer.wait();
+audio.play();
 
-process.exit(0);
+await audio.wait();
+
+audio.destroy();
 ```
 
 # Documentation
 
-## MixPlayer.play(PathLike file)
+## MixPlayer.createAudio(PathLike file): Object | null
 
-Plays a supported file type (FLAC, MP3, Ogg, VOC, and WAV). Will either use default system playback device or output device selected by MixPlayer.setPlaybackDevices().
+Creates an audio object if file type is supported (MP3, FLAC, WAV). Methods are below.
 
-## MixPlayer.pause()
+### audio.play()
 
-Pauses current audio.
+Plays audio from current track position
 
-## MixPlayer.resume()
+### audio.pause()
 
-Resumes current audio.
+Pauses audio playback
 
-## MixPlayer.rewind()
+### audio.isPlaying(): Boolean
 
-Plays current audio from beginning, even after it has ended.
+Returns true if audio is playing
 
-## MixPlayer.seek(Number seconds)
+### audio.getDuration(): Number
 
-Seeks audio to given time. Does not work if audio has ended.
+returns the total duration of the audio in seconds
 
-## MixPlayer.setVolume(Number volume)
+### audio.seek(Number position)
 
-Sets playback volume. Volume ranges from 0 (silence) - 128 (full loudness). Default is 128.
+Sets the track position in seconds
 
-## MixPlayer.getVolume() -> Number
+### audio.getTrackPosition: Number
 
-Returns current volume.
+Returns the current track position in seconds
 
-## MixPlayer.isPlaying() -> Boolean
+### audio.setVolume(Number volume)
 
-Returns true if audio is currently playing. False otherwise.
+Sets the playback volume in decibels. A positive integer increases the volume (e.g 10) while a negative integer decreases it (e.g -10)
 
-## MixPlayer.getAudioDuration() -> Number
+### audio.getVolume(): Number
 
-Returns the total duration of current audio in seconds
+Returns the volume change in db
 
-## MixPlayer.getAudioPosition() -> Number
+### audio.wait(): Promise
 
-Get the time current position of audio stream, in seconds.
+Returns a Promise that resolves when audio ends, resolving immediately if paused.
 
-## MixPlayer.wait() -> Promise
+### audio.onAudioEnd(Function callback, Boolean callOnce = false)
 
-Returns a Promise that resolves when audio ends, resolving immediately if none is playing. Also resolves if audio is paused or MixPlayer is destroyed.
+Add a callback that fires once audio ends. If callOnce is set to true, callback is only fired the first time audio ends.
 
-## MixPlayer.onAudioEnd(Function callback)
+### audio.setLooping(boolean loop)
 
-Set a callback that fires when audio ends.
+If true, audio loops after end. NOTE: wait and onAudioEnd are not fired.
 
-## MixPlayer.setFadeIn(Number milliseconds)
+### audio.destroy()
 
-Sets the amount of time taken to go from silence to full volume. Default is 0 ms.
+Destroys audio object and frees memory
 
-## MixPlayer.loop(bool shouldLoop)
+## MixPlayer.getPlaybackDevices(): Object[]
 
-Switches the option to loop current audio when it ends. If looping is enabled, then the promise from MixPlayer.wait() will not resolve after audio ends.
-
-## getOutputDevices() -> String[]
-
-Returns an array of available playback device names. The first element is the default system playback device.
-
-## MixPlayer.setPlaybackDevice(Number index)
-
-Set the playback device to the device at given index of MixPlayer.getAudioDevices(). Note that if the specified device disconnects, then output device is not automatically changed.
-
-## MixPlayer.destroy()
-
-Destroy MixPlayer, uninitializing the player and removing the callback loop, to safely exit the program. MIXPLAYER CANNOT BE REINITIALIZED!
+Returns an array of objects on playback device information, including id, name, and whether its the default playback device.
