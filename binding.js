@@ -51,6 +51,12 @@ function createAudio(filePath) {
 
       return addon.pauseSound(audioIndex);
     },
+    seek: (position) => {
+      if (position < 0 || position > factory.getDuration()) {
+        throw new Error("Invalid position");
+      }
+      return addon.seekSound(audioIndex, position);
+    },
     setLooping: (loop) => {
       return addon.setSoundLooping(audioIndex, loop);
     },
