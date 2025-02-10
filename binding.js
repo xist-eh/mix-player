@@ -5,12 +5,16 @@ import path from "path";
 import addon from "./intermediary.js";
 import { get } from "http";
 
+function initializeMixPlayer() {
+  addon.initAudioEngine();
+}
+
 function getPlaybackDevices() {
   return addon.getPlaybackDevices();
 }
 
-function initializeMixPlayer() {
-  addon.initAudioEngine();
+function setPlaybackDevice(deviceId) {
+  return addon.setPlaybackDevice(deviceId);
 }
 
 function createAudio(filePath) {
@@ -48,6 +52,9 @@ function createAudio(filePath) {
 
       return addon.pauseSound(audioIndex);
     },
+    getFilePath: () => {
+      return filePath;
+    },
     seek: (position) => {
       if (position < 0 || position > factory.getDuration()) {
         throw new Error("Invalid position");
@@ -68,6 +75,18 @@ function createAudio(filePath) {
     },
     getTrackPosition: () => {
       return addon.getSoundPosition(audioIndex);
+    },
+    getPitch: () => {
+      return addon.getSoundPitch(audioIndex);
+    },
+    setPitch: (pitch) => {
+      return addon.setSoundPitch(audioIndex, pitch);
+    },
+    getPan: () => {
+      return addon.getSoundPan(audioIndex);
+    },
+    setPan: (pan) => {
+      return addon.setSoundPan(audioIndex, pan);
     },
     onAudioEnd: (callback, callOnce = false) => {
       if (callOnce) {
@@ -121,6 +140,7 @@ const MixPlayerFactory = () => {
   return {
     createAudio,
     getPlaybackDevices,
+    setPlaybackDevice,
   };
 };
 

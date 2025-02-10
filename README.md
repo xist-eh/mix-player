@@ -82,4 +82,10 @@ Destroys audio object and frees memory
 
 ## MixPlayer.getPlaybackDevices(): Object[]
 
-Returns an array of objects on playback device information, including id, name, and whether its the default playback device.
+Returns an array of objects on playback device information.
+
+Keys: id (Number), name (String), isDefault (boolean)
+
+## MixPlayer.setPlaybackDevice(Number deviceId)
+
+Sets the playback device to id, which can be found using

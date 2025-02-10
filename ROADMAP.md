@@ -2,7 +2,7 @@
 
 ## Top priorities
 
-1. Change output device
+1. Change output device for each soune
 2. Fix band-aid to make .wait() work
 3. Switch JS bridge to TypeScript
 
