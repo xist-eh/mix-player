@@ -1,5 +1,8 @@
 import { createRequire } from "module";
 import { DEVMODE } from "./config.js";
+import getDistFolder from "./get_dist_folder.js";
+import { existsSync } from "fs";
+import path from "path";
 
 let addon;
 
@@ -12,16 +15,13 @@ function importAddon(url) {
 
 if (DEVMODE) {
   importAddon("./src/build/Release/mix-player-native");
-} else if(process.platform === "win32"){
-  importAddon("./dist/win/mix-player-native");
-}
-else if(process.platform === "darwin"){
-  importAddon("./dist/darwin/mix-player-native");
-}
-else if(process.platform === "linux"){
-  importAddon("./dist/linux/mix-player-native");
-}
-else {
-  throw new Error("Precompiled binaries for Mix Player do not exist for your platform!");
+} else {
+  let destination_dist_folder = getDistFolder();
+  if (
+    !existsSync(path.join(destination_dist_folder + "/mix-player-native.node"))
+  ) {
+    throw new Error("Addon not found! Please run npm run dist");
+  }
+  importAddon(path.join(destination_dist_folder + "/mix-player-native.node"));
 }
 export default addon;

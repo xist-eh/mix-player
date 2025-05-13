@@ -2,18 +2,13 @@
 
 import { copyFileSync } from "node:fs";
 import { execSync } from "child_process";
+import path from "node:path";
+import getDistFolder from "../get_dist_folder";
 
-let destination_dist_folder;
-if (process.platform === "win32" || process.platform === "cygwin") {
-  destination_dist_folder = "dist/win";
-} else if (process.platform === "linux") {
-  destination_dist_folder = "dist/linux";
-} else if (process.platform === "darwin") {
-  destination_dist_folder = "dist/darwin";
-}
+let destination_dist_folder = getDistFolder();
 
 execSync("npm run build");
 copyFileSync(
-  "./src/build/Release/mix-player-native.node",
-  destination_dist_folder + "/mix-player-native.node"
+  path.resolve("./src/build/Release/mix-player-native.node"),
+  path.join(destination_dist_folder + "/mix-player-native.node")
 );
