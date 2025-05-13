@@ -1,4 +1,5 @@
 tests/
 .vscode/
-
+src/build/
+src/node_modules/
 

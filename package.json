@@ -16,7 +16,7 @@
   },
   "gypfile": true,
   "name": "mix-player",
-  "version": "2.0.3",
+  "version": "4.0.5",
   "description": "cross platform & feature-rich audio player",
   "keywords": [
     "audio player",

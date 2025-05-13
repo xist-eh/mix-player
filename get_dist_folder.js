@@ -1,3 +1,5 @@
+import path from "path";
+
 export default function getDistFolder() {
   if (process.platform === "win32" || process.platform === "cygwin") {
     return "dist/win";
@@ -10,4 +12,13 @@ export default function getDistFolder() {
   } else {
     return "dist/unknown";
   }
+}
+
+export function getDistPath() {
+  return path.join(
+    import.meta.dirname,
+    "/",
+    getDistFolder(),
+    "/mix-player-native.node"
+  );
 }
