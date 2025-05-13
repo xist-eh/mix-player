@@ -1,7 +1,6 @@
 //Builds native addon and adds it to a dist folder
 
 import { copyFileSync } from "node:fs";
-import { promisify } from "util";
 import { execSync } from "child_process";
 
 let destination_dist_folder;

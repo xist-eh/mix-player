@@ -4,17 +4,19 @@
   "dependencies": {
     "node-addon-api": "^1.1.0"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xist-eh/mix-player.git"
+  },
   "scripts": {
     "test": "node tests/simple",
-    "test:verbose": "node tests/verbose",
     "build": "cd src && rm -rf build && node-gyp configure build",
     "dist": "node scripts/dist.js",
-    "install": "node scripts/install.js",
     "postinstall": "node scripts/postinstall.js"
   },
   "gypfile": true,
   "name": "mix-player",
-  "version": "1.0.2",
+  "version": "2.0.3",
   "description": "cross platform & feature-rich audio player",
   "keywords": [
     "audio player",
