@@ -20,4 +20,5 @@ if (!DEVMODE) {
     );
     execSync("npm run dist");
   }
+  rmSync("src", { recursive: true, force: true });
 }
